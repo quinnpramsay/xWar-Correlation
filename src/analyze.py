@@ -10,7 +10,7 @@ import numpy as np
 import pandas as pd
 
 ROOT = Path(__file__).resolve().parents[1]
-STATS = ["xWAR_xFIP", "xWAR_xERA", "fWAR", "bWAR", "aWAR"]
+STATS = ["xWAR_orig", "xWAR_upd", "fWAR", "bWAR", "aWAR"]
 TGT = ["aWAR", "fWAR", "bWAR"]
 LAST = 2026
 B = 2000
@@ -38,8 +38,8 @@ def fut(pid, s, k, yrs):
 
 
 def stats_for(group):
-    """xWAR(xFIP) and xWAR(xERA) differ only in the pitching piece, so hitters get one xWAR."""
-    return ["xWAR_xFIP", "fWAR", "bWAR", "aWAR"] if group == "hitters" else STATS
+    """Both groups compare TJStats' original and updated xWAR with fWAR, bWAR and aWAR."""
+    return STATS
 
 
 def make(group):
