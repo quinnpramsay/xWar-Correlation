@@ -1,17 +1,29 @@
-# xWAR Correlation: does xWAR predict the future better than WAR?
+# xWAR Correlation: is xWAR stickier than WAR, and does it predict the future better?
 
 **The idea for xWAR comes from [Thomas Nestico (TJStats on X)](https://x.com/TJStats).** His goal is to capture player value from the factors a player can most directly impact, while my goal is to predict a player's future WAR, so I made some fine-tuning changes to help toward that goal. Fielding weights come from [Tom Tango's research](https://tangotiger.com/index.php/site/comments/comparing-statcast-fielding-run-value-frv-to-drs). Full credits and a disclaimer are at the bottom.
 
 When looking at expected stats, I usually like to see whether a player outperformed or underperformed them, and whether that gap correlates with future outcomes. So I decided to put that together and look into it.
 
-xWAR rebuilds fWAR from the parts of a season a player controls most: expected batting (xwOBA), expected pitching (xFIP or xERA) and a position-weighted blend of two fielding metrics. This project tests whether xWAR predicts a player's future WAR better than FanGraphs WAR (fWAR), Baseball-Reference WAR (bWAR) or their average (aWAR).
+xWAR rebuilds fWAR from the parts of a season a player controls most: expected batting (xwOBA), expected pitching (xFIP or xERA) and a position-weighted blend of two fielding metrics. I wanted to test two things: whether xWAR is **stickier** than FanGraphs WAR (fWAR), Baseball-Reference WAR (bWAR) and their average (aWAR), meaning it predicts itself from one season to the next better, and whether it **predicts other WAR** (a player's future fWAR, bWAR and aWAR) better than those stats do.
+
+## Top finding: xWAR is stickier than fWAR and bWAR
+
+Each value is the correlation between a stat in one season and the same stat the next season, for players who qualified both years (200+ PA or 40+ IP, base seasons 2016 to 2025). Higher means stickier.
+
+| Group | n | xWAR(xFIP) | xWAR(xERA) | fWAR | bWAR | aWAR | xWAR's edge over next best [95% interval] |
+|---|---:|---:|---:|---:|---:|---:|---|
+| Hitters | 2,364 | **0.552** | same as xFIP | 0.507 | 0.494 | 0.507 | +0.045 [+0.027, +0.064] over fWAR |
+| Pitchers | 2,314 | **0.674** | 0.556 | 0.550 | 0.352 | 0.472 | +0.118 [+0.091, +0.149] over xWAR(xERA) |
+
+xWAR is the stickiest version of WAR for both hitters and pitchers, and the edge is clear in both groups. For pitchers, xWAR(xFIP) is 0.124 stickier than fWAR and 0.323 stickier than bWAR. For hitters, xWAR is 0.045 stickier than fWAR and 0.058 stickier than bWAR. Sticky doesn't automatically mean better, since a stat can also be sticky by ignoring real differences between players (xFIP, for example, gives every pitcher a league-average home run rate on fly balls). That's why the second test, predicting actual future WAR, matters too.
 
 ## The short answer
 
 | | Result |
 |---|---|
-| **Pitchers** | **xWAR(xFIP) is the best predictor** at every horizon and on every target. Next-season aWAR: r = 0.562, vs 0.531 for fWAR. The xERA version predicts worse than plain fWAR (0.518). |
-| **Hitters** | **A tie.** xWAR and aWAR finish within noise of each other (next-season r = 0.574 vs 0.565). Both edge out fWAR and bWAR by about 0.01 to 0.02. |
+| **Stickiness** | **xWAR is the stickiest** for both hitters (r = 0.552 vs 0.507 for fWAR) and pitchers (r = 0.674 vs 0.550). |
+| **Predicting WAR: pitchers** | **xWAR(xFIP) is the best predictor** at every horizon and on every target. Next-season aWAR: r = 0.562, vs 0.531 for fWAR. The xERA version predicts worse than plain fWAR (0.518). |
+| **Predicting WAR: hitters** | **A tie.** xWAR and aWAR finish within noise of each other (next-season r = 0.574 vs 0.565). Both edge out fWAR and bWAR by about 0.01 to 0.02. |
 | **Horizon** | **5 seasons.** The future average levels off by 5 seasons (reliability 0.89 hitters, 0.85 pitchers). Longer windows cost a base season per year and mostly measure aging. |
 
 ## The stats compared
@@ -163,6 +175,7 @@ All data was downloaded locally and is **not included in this repository**. Some
 | `PLAN.md` | Test plan written before any results, plus later amendments |
 | `src/build.py` | Builds the player-season table with fWAR, bWAR, aWAR, xWAR(xFIP) and xWAR(xERA) |
 | `src/analyze.py` | Main tests (see PLAN.md). Sensitivity flags: `--pa 400 --ip 100`, `--no2020scale`, `--played-only`, `--bases 2016-2019` |
+| `src/stickiness.py` | Year-to-year stickiness of each stat (added after the main tests) |
 | `src/report.py`, `src/make_readme.py` | Write the full tables and this README |
 
 Requirements: Python 3.9+, pandas, numpy (`pip install -r requirements.txt`).

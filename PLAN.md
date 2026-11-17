@@ -53,3 +53,4 @@ PA ≥ 400 or IP ≥ 100; 2020 not scaled; only players who played in the target
 - Tests, targets, metrics and the N rule are unchanged. The earlier variants are kept in data/processed/player_seasons.csv for comparison.
 - Update: the park factor was restored at the user's direction (FanGraphs park-adjusted batting runs plus the xwOBA − wOBA delta). Removing it gave no gain over 1 to 5 years and was worse for the 10-year best season. The no-park and 50/50-fielding variants are still built in src/build.py for comparison.
 - Update: the main comparison is this repo's xWAR(xFIP) and xWAR(xERA) (park factor kept, Tango position weights), tuned toward predicting future WAR.
+- Added after the main tests (not pre-registered): year-to-year stickiness of each stat, src/stickiness.py.
