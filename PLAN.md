@@ -48,7 +48,7 @@ PA ≥ 400 or IP ≥ 100; 2020 not scaled; only players who played in the target
 
 ## Amendment (2026-11-17, after the first results, at the user's direction)
 - Renamed xWAR-1 → xWAR(xFIP), xWAR-2 → xWAR(xERA).
-- Fielding: replaced the 50/50 FRV/DRS average with Tango's position weights (FRV share: C .93, OF .92, 1B .67, SS .60, 2B .40, 3B .40), with both metrics centered within position-season. Checked against our own replication (src/defense_weights.py).
+- Fielding: replaced the 50/50 FRV/DRS average with Tango's position weights (FRV share: C .93, OF .92, 1B .67, SS .60, 2B .40, 3B .40), with both metrics centered within position-season.
 - Batting: batting runs come from xwOBA vs the MLB non-pitcher average with no park factor, replacing FanGraphs' park-adjusted batting runs.
 - Tests, targets, metrics and the N rule are unchanged. The earlier variants are kept in data/processed/player_seasons.csv for comparison.
 - Update: the park factor was restored at the user's direction (FanGraphs park-adjusted batting runs plus the xwOBA − wOBA delta). Removing it gave no gain over 1 to 5 years and was worse for the 10-year best season. The no-park and 50/50-fielding variants are still built in src/build.py for comparison.

@@ -1,5 +1,4 @@
-"""Write README.md from the local results (results/results_main.json, results/changes.json,
-results/defense_weights.csv). The README shows only aggregate summary statistics."""
+"""Write README.md from the local results (results/results_*.json). The README shows only aggregate summary statistics."""
 import json
 from pathlib import Path
 
@@ -8,7 +7,6 @@ import pandas as pd
 ROOT = Path(__file__).resolve().parents[1]
 R = ROOT / "results"
 o = json.load(open(R / "results_main.json"))
-dw = pd.read_csv(R / "defense_weights.csv")
 SENS = {t: json.load(open(R / f"results_{t}.json")) for t in ["strict", "no2020", "played", "fixed1619"]}
 COLS = ["xWAR_xFIP", "xWAR_xERA", "fWAR", "bWAR", "aWAR"]
 NAME = {"xWAR_xFIP": "xWAR(xFIP)", "xWAR_xERA": "xWAR(xERA)", "fWAR": "fWAR", "bWAR": "bWAR", "aWAR": "aWAR"}
@@ -55,10 +53,8 @@ def md_horizon():
 
 
 TANGO = {"C": .93, "OF": .92, "1B": .67, "SS": .60, "2B": .40, "3B": .40}
-ours = dw[dw.window == "2021-2026"].set_index("group")
-wmd = "\n".join(["| Position | FRV weight (Tango) | DRS weight | Our check, 2021–26 | Year-to-year pairs |", "|---|---:|---:|---:|---:|"] +
-                [f"| {p} | {TANGO[p]:.2f} | {1 - TANGO[p]:.2f} | {ours.loc[p, 'FRV weight']:.2f} | {int(ours.loc[p, 'pairs'])} |"
-                 for p in ["C", "OF", "1B", "SS", "2B", "3B"]])
+wmd = "\n".join(["| Position | FRV weight | DRS weight |", "|---|---:|---:|"] +
+                [f"| {p} | {TANGO[p]:.2f} | {1 - TANGO[p]:.2f} |" for p in ["C", "OF", "1B", "SS", "2B", "3B"]])
 
 intro = {"aWAR": "aWAR is the fairest target, because it isn't built from any single site's WAR.",
          "bWAR": "This target favors bWAR, since it shares bWAR's own method.",
@@ -85,6 +81,8 @@ for res in [o] + list(SENS.values()):
 readme = f"""# xWAR Correlation: does xWAR predict the future better than WAR?
 
 **The idea for xWAR comes from [Thomas Nestico (TJStats on X)](https://x.com/TJStats).** His goal is to capture player value from the factors a player can most directly impact, while my goal is to predict a player's future WAR, so I made some fine-tuning changes to help toward that goal. Fielding weights come from [Tom Tango's research](https://tangotiger.com/index.php/site/comments/comparing-statcast-fielding-run-value-frv-to-drs). Full credits and a disclaimer are at the bottom.
+
+When looking at expected stats, I usually like to see whether a player outperformed or underperformed them, and whether that gap correlates with future outcomes. So I decided to put that together and look into it.
 
 xWAR rebuilds fWAR from the parts of a season a player controls most: expected batting (xwOBA), expected pitching (xFIP or xERA) and a position-weighted blend of two fielding metrics. This project tests whether xWAR predicts a player's future WAR better than FanGraphs WAR (fWAR), Baseball-Reference WAR (bWAR) or their average (aWAR).
 
@@ -117,7 +115,7 @@ Each value is the Pearson r between a stat in one season and the player's later 
 
 ## Why a 5-season horizon
 
-Before seeing which stat won, we set a rule (see [PLAN.md](PLAN.md)): pick the shortest horizon where the future average stops getting more reliable (gain under 0.03 per added year) and the ranking of the stats stops changing. For pitchers the rule picked 5 seasons in 4 of 5 checks, and 6 in the other. For hitters it landed between 5 and 7, because the top hitter stats are tied and keep swapping places. Five seasons keeps the most data at nearly full reliability. Past that, aging (about 0.5 WAR lost per year after 30) and survivor bias drive the numbers more than the season being measured.
+Before seeing which stat won, I set a rule (see [PLAN.md](PLAN.md)): pick the shortest horizon where the future average stops getting more reliable (gain under 0.03 per added year) and the ranking of the stats stops changing. For pitchers the rule picked 5 seasons in 4 of 5 checks, and 6 in the other. For hitters it landed between 5 and 7, because the top hitter stats are tied and keep swapping places. Five seasons keeps the most data at nearly full reliability. Past that, aging (about 0.5 WAR lost per year after 30) and survivor bias drive the numbers more than the season being measured.
 
 {md_horizon()}
 
@@ -126,13 +124,13 @@ Reliability is split-half (odd vs even future seasons), corrected to the full wi
 ## How xWAR was built
 
 - **Batting:** FanGraphs batting runs plus (xwOBA − wOBA) / wOBA scale × PA, using Baseball Savant's xwOBA and wOBA, centered so each season's league total is unchanged. FanGraphs' park adjustment is kept. (Removing it gave no gain over 1 to 5 seasons and was worse for the 10-year best season.)
-- **Fielding:** FanGraphs fielding is based on FRV, so it is replaced with w × FRV + (1 − w) × DRS, with both centered within position and season. The weight w depends on position (below). Swapping these weights for a flat 50/50 changed no result by more than 0.003.
+- **Fielding:** FanGraphs fielding is based on FRV, so it is replaced with w × FRV + (1 − w) × DRS, with both centered within position and season. The weight w depends on position (below).
 - **Pitching:** fWAR plus (FIP − xFIP) × IP / 9, or (FIP − xERA) × IP / 9, converted to wins with each pitcher's own FanGraphs runs-per-win ratio. Both are centered so each season's league average is unchanged.
 - **League check:** league-wide xWAR stays within about 1% of fWAR in every season.
 
 ### Fielding weights by position
 
-From Tom Tango's ["Comparing Statcast Fielding Run Value (FRV) to DRS"](https://tangotiger.com/index.php/site/comments/comparing-statcast-fielding-run-value-frv-to-drs) (September 2026). We reproduced his test on the same seasons ([src/defense_weights.py](src/defense_weights.py)) and got the same sample sizes and year-to-year correlations within 0.02. Our own fitted weights agree on direction: catchers and outfielders lean FRV, 2B and 3B lean DRS.
+I used the position weights from Tom Tango's ["Comparing Statcast Fielding Run Value (FRV) to DRS"](https://tangotiger.com/index.php/site/comments/comparing-statcast-fielding-run-value-frv-to-drs) (September 2026), because his research is the best available on how the two metrics compare by position. Catchers and outfielders lean on FRV, while 2B and 3B lean on DRS.
 
 {wmd}
 
@@ -155,7 +153,6 @@ All data was downloaded locally and is **not included in this repository**. Some
 |---|---|
 | `PLAN.md` | Test plan written before any results, plus later amendments |
 | `src/build.py` | Builds the player-season table with fWAR, bWAR, aWAR, xWAR(xFIP) and xWAR(xERA) |
-| `src/defense_weights.py` | Replicates Tango's FRV vs DRS test |
 | `src/analyze.py` | Main tests (see PLAN.md). Sensitivity flags: `--pa 400 --ip 100`, `--no2020scale`, `--played-only`, `--bases 2016-2019` |
 | `src/report.py`, `src/make_readme.py` | Write the full tables and this README |
 
@@ -178,7 +175,7 @@ Requirements: Python 3.9+, pandas, numpy (`pip install -r requirements.txt`).
 
 fWAR is a statistic of FanGraphs. bWAR (Baseball-Reference WAR) is a statistic of Sports Reference LLC. The xWAR concept is the work of Thomas Nestico. Statcast metrics (xwOBA, xERA, Fielding Run Value) belong to MLB Advanced Media. Defensive Runs Saved belongs to Sports Info Solutions. All names and trademarks belong to their respective owners and are used here only to identify the source of the data.
 
-This repository publishes only code and the aggregate summary statistics shown above (correlations and sample sizes) from our own analysis. It does not reproduce or redistribute any provider's data tables, player-level statistics or leaderboards. To view the underlying statistics, please visit the original sources linked above.
+This repository publishes only code and the aggregate summary statistics shown above (correlations and sample sizes) from my own analysis. It does not reproduce or redistribute any provider's data tables, player-level statistics or leaderboards. To view the underlying statistics, please visit the original sources linked above.
 
 Data accessed November 2026. Source figures may be revised by their providers. Results are provided as is, without warranty of accuracy, and are not betting, fantasy or financial advice.
 """

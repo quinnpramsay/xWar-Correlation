@@ -3,3 +3,4 @@ results/
 .DS_Store
 __pycache__/
 *.pyc
+src/defense_weights.py
