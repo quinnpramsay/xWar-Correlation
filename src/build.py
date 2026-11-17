@@ -1,4 +1,4 @@
-"""Build one row per player-season (2015-2026) with fWAR, bWAR, aWAR and TJStats' original and updated xWAR.
+"""Build one row per player-season (2015-2026) with fWAR, bWAR, aWAR, xWAR(xFIP) and xWAR(xERA).
 
 xWAR is fWAR with three swaps (see PLAN.md):
   batting  : FanGraphs batting runs + (xwOBA - wOBA, season-centered) / wOBA scale * PA. FanGraphs' park
@@ -132,15 +132,6 @@ ps["xWAR_xFIP"] = base + ps.dPit1_war
 ps["xWAR_xERA"] = base + ps.dPit2_war
 # comparison variants (hitters; pitching piece = xFIP)
 ps["v1_parkkept_5050"] = ps.fWAR + ps.dBat_war + ps.dFld_war + ps.dPit1_war       # previous build
-# TJStats' two published versions (Thomas Nestico, @TJStats):
-#   original (Nov 16, 2026): xwOBA batting with FanGraphs park factor, xFIP pitching, FRV/DRS 50/50
-#   updated  (Nov 17, 2026): xwOBA batting with no park factor, xERA pitching, Tango position weights
-ps["xWAR_orig"] = ps.fWAR + ps.dBat_war + ps.dFld_war + ps.dPit1_war
-ps["xWAR_upd"] = ps.fWAR + ps.dBatNP_war + ps.dFld_tango_war + ps.dPit2_war
-# one change at a time from the original
-ps["chg_xera"] = ps.fWAR + ps.dBat_war + ps.dFld_war + ps.dPit2_war         # xFIP -> xERA
-ps["chg_tango"] = ps.fWAR + ps.dBat_war + ps.dFld_tango_war + ps.dPit1_war  # 50/50 -> Tango weights
-ps["chg_nopark"] = ps.fWAR + ps.dBatNP_war + ps.dFld_war + ps.dPit1_war     # park factor removed
 ps["v_nopark_5050"] = ps.fWAR + ps.dBatNP_war + ps.dFld_c5050_war + ps.dPit1_war
 ps["v_nopark_ours"] = ps.fWAR + ps.dBatNP_war + ps.dFld_ours_war + ps.dPit1_war
 ps["v_nopark_tango"] = ps.fWAR + ps.dBatNP_war + ps.dFld_tango_war + ps.dPit1_war
@@ -150,11 +141,11 @@ const.to_csv(OUT / "season_constants.csv", index=False)
 # ---------- checks ----------
 print(const.round(3).to_string(index=False))
 print(f"\n{len(ps):,} player-seasons, {ps.MLBAMID.nunique():,} players, bWAR missing: {ps.age.isna().mean():.1%}")
-lgsum = ps.groupby("Season")[["fWAR", "bWAR", "xWAR_orig", "xWAR_upd"]].sum().round(0)
+lgsum = ps.groupby("Season")[["fWAR", "bWAR", "xWAR_xFIP", "xWAR_xERA"]].sum().round(0)
 print("\nLeague WAR totals (xWAR should stay close to fWAR):\n", lgsum.to_string())
 h = ps[(ps.PA >= 200) & (ps.Season >= 2016)]
 pt = ps[(ps.IP >= 40) & (ps.Season >= 2016)]
-print("\nHitters PA>=200: corr", h[["fWAR", "bWAR", "aWAR", "xWAR_orig", "xWAR_upd"]].corr().round(2).to_string())
-print("\nPitchers IP>=40: corr", pt[["fWAR", "bWAR", "aWAR", "xWAR_orig", "xWAR_upd"]].corr().round(2).to_string())
+print("\nHitters PA>=200: corr", h[["fWAR", "bWAR", "aWAR", "xWAR_xFIP"]].corr().round(2).to_string())
+print("\nPitchers IP>=40: corr", pt[["fWAR", "bWAR", "aWAR", "xWAR_xFIP", "xWAR_xERA"]].corr().round(2).to_string())
 print("\nSD of deltas (wins), hitters: bat(no park) %.2f bat(park kept) %.2f fld(Tango) %.2f fld(50/50) %.2f | pitchers: xFIP %.2f xERA %.2f" % (
     h.dBatNP_war.std(), h.dBat_war.std(), h.dFld_tango_war.std(), h.dFld_war.std(), pt.dPit1_war.std(), pt.dPit2_war.std()))

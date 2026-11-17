@@ -3,11 +3,11 @@ import json
 from pathlib import Path
 R = Path(__file__).resolve().parents[1] / "results"
 o = json.load(open(R / "results_main.json"))
-name = {"xWAR_orig": "xWAR original", "xWAR_upd": "xWAR updated", "fWAR": "fWAR", "bWAR": "bWAR", "aWAR": "aWAR"}
+name = {"xWAR_xFIP": "xWAR(xFIP)", "xWAR_xERA": "xWAR(xERA)", "fWAR": "fWAR", "bWAR": "bWAR", "aWAR": "aWAR"}
 L = []
 def table(title, rows, group):
-    stats = ["xWAR_orig", "xWAR_upd", "fWAR", "bWAR", "aWAR"]
-    hdr = [name[s] for s in stats]
+    stats = ["xWAR_xFIP", "fWAR", "bWAR", "aWAR"] if group == "hitters" else ["xWAR_xFIP", "xWAR_xERA", "fWAR", "bWAR", "aWAR"]
+    hdr = ["xWAR" if (s == "xWAR_xFIP" and group == "hitters") else name[s] for s in stats]
     L.append(f"\n**{title}**\n\n| Target | n | " + " | ".join(hdr) + " | Leader's edge over 2nd [95% CI] |\n|" + "---|" * (len(stats) + 3))
     for e in rows:
         if not e: continue

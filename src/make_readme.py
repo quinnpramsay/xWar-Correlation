@@ -8,11 +8,18 @@ import pandas as pd
 ROOT = Path(__file__).resolve().parents[1]
 R = ROOT / "results"
 o = json.load(open(R / "results_main.json"))
-ch = json.load(open(R / "changes.json"))
 dw = pd.read_csv(R / "defense_weights.csv")
 SENS = {t: json.load(open(R / f"results_{t}.json")) for t in ["strict", "no2020", "played", "fixed1619"]}
-COLS = ["xWAR_orig", "xWAR_upd", "fWAR", "bWAR", "aWAR"]
-NAME = {"xWAR_orig": "xWAR original", "xWAR_upd": "xWAR updated", "fWAR": "fWAR", "bWAR": "bWAR", "aWAR": "aWAR"}
+COLS = ["xWAR_xFIP", "xWAR_xERA", "fWAR", "bWAR", "aWAR"]
+NAME = {"xWAR_xFIP": "xWAR(xFIP)", "xWAR_xERA": "xWAR(xERA)", "fWAR": "fWAR", "bWAR": "bWAR", "aWAR": "aWAR"}
+
+
+def cols_for(group):
+    return ["xWAR_xFIP", "fWAR", "bWAR", "aWAR"] if group == "hitters" else COLS
+
+
+def label(c, group):
+    return "xWAR" if (group == "hitters" and c == "xWAR_xFIP") else NAME[c]
 ROWS = [("next", "Next season"), ("mean5", "Average of next 5 seasons"), ("max5", "Best season in next 5"),
         ("max10", "Best season in next 10 †")]
 
@@ -24,30 +31,15 @@ def find(res, group, kind, tgt):
 
 
 def md_table(tgt, group):
-    L = ["| Horizon | n | " + " | ".join(NAME[c] for c in COLS) + " | Leader's edge [95% interval] |",
-         "|---|---:|" + "---:|" * len(COLS) + "---|"]
+    cols = cols_for(group)
+    L = ["| Horizon | n | " + " | ".join(label(c, group) for c in cols) + " | Leader's edge [95% interval] |",
+         "|---|---:|" + "---:|" * len(cols) + "---|"]
     for kind, kl in ROWS:
         e = find(o, group, kind, tgt)
         clear = e["gap_ci"][0] > 0
-        cells = [f"**{e['r'][c]:.3f}**" if c == e["best"] else f"{e['r'][c]:.3f}" for c in COLS]
+        cells = [f"**{e['r'][c]:.3f}**" if c == e["best"] else f"{e['r'][c]:.3f}" for c in cols]
         lo, hi = e["gap_ci"]
         L.append(f"| {kl} | {e['n']:,} | " + " | ".join(cells) + f" | {e['gap']:+.3f} [{lo:+.3f}, {hi:+.3f}] {'clear' if clear else 'tie'} |")
-    return "\n".join(L)
-
-
-def md_changes():
-    L = ["| Group | Change | Next season | Average of next 5 | Best season in next 10 |", "|---|---|---|---|---|"]
-    for group, gl in [("pitchers", "Pitchers"), ("hitters", "Hitters")]:
-        by = {}
-        for r in ch[group]:
-            by.setdefault(r["change"], {})[r["target"]] = r
-        for cname, t in by.items():
-            cells = []
-            for tl in ["Next season", "Average of next 5", "Best season in next 10"]:
-                r = t[tl]
-                sig = " **(clear)**" if (r["hi"] < 0 or r["lo"] > 0) else ""
-                cells.append(f"{r['r_original']:.3f} → {r['r_changed']:.3f} ({r['diff']:+.3f} [{r['lo']:+.3f}, {r['hi']:+.3f}]){sig}")
-            L.append(f"| {gl} | {cname} | " + " | ".join(cells) + " |")
     return "\n".join(L)
 
 
@@ -79,56 +71,46 @@ for t in ["aWAR", "bWAR", "fWAR"]:
 
 pn, pm = find(o, "pitchers", "next", "aWAR"), find(o, "pitchers", "mean5", "aWAR")
 hn, hm, h10 = find(o, "hitters", "next", "aWAR"), find(o, "hitters", "mean5", "aWAR"), find(o, "hitters", "max10", "aWAR")
-px = {r["target"]: r for r in ch["pitchers"] if r["change"] == "xFIP → xERA"}
-hp = {r["target"]: r for r in ch["hitters"] if r["change"] == "Park factor removed"}
 nh, nhp, np_, npp = o["hitters"]["n_rows"], o["hitters"]["n_players"], o["pitchers"]["n_rows"], o["pitchers"]["n_players"]
 
 # robustness checks used in the text (asserted so the README can't drift from the results)
 for res in [o] + list(SENS.values()):
-    for kind in ["next", "mean5", "max10"]:
-        e = find(res, "pitchers", kind, "aWAR")
-        assert e["best"] == "xWAR_orig" and e["gap_ci"][0] > 0, "pitcher claim no longer holds"
     for kind in ["next", "mean5"]:
+        e = find(res, "pitchers", kind, "aWAR")
+        assert e["best"] == "xWAR_xFIP" and e["gap_ci"][0] > 0, "pitcher claim no longer holds"
+        assert e["r"]["xWAR_xERA"] < e["r"]["fWAR"], "xERA claim no longer holds"
         assert find(res, "hitters", kind, "aWAR")["gap_ci"][0] <= 0, "hitter tie claim no longer holds"
-    e = find(res, "hitters", "max10", "aWAR")
-    assert e["ranking"][-1] == "xWAR_upd", "hitter 10-year claim no longer holds"
+    assert find(res, "pitchers", "max10", "aWAR")["best"] == "xWAR_xFIP", "pitcher 10-year claim no longer holds"
 
 readme = f"""# xWAR Correlation: does xWAR predict the future better than WAR?
 
-**xWAR was created by [Thomas Nestico (TJStats on X)](https://x.com/TJStats).** His official version and full leaderboard are at [tjstats.ca/xwar](https://tjstats.ca/xwar/). This repository is an independent rebuild of both of his published versions from his descriptions. It may differ from his exact implementation, so use his leaderboard for official xWAR values. Fielding weights come from [Tom Tango's research](https://tangotiger.com/index.php/site/comments/comparing-statcast-fielding-run-value-frv-to-drs). Full credits and a disclaimer are at the bottom.
+**The idea for xWAR comes from [Thomas Nestico (TJStats on X)](https://x.com/TJStats).** His goal is to capture player value from the factors a player can most directly impact, while my goal is to predict a player's future WAR, so I made some fine-tuning changes to help toward that goal. Fielding weights come from [Tom Tango's research](https://tangotiger.com/index.php/site/comments/comparing-statcast-fielding-run-value-frv-to-drs). Full credits and a disclaimer are at the bottom.
 
-xWAR is built from fWAR and uses expected stats to capture player value from the factors a player can more directly impact. This project asks a different question than xWAR was designed for: **how well does each version predict a player's future WAR**, compared with FanGraphs WAR (fWAR), Baseball-Reference WAR (bWAR) and their average (aWAR)? A stat can describe a season well and still forecast worse, so these results are about prediction only.
-
-## The two versions of xWAR
-
-| | xWAR original (Nov 16, 2026) | xWAR updated (Nov 17, 2026) |
-|---|---|---|
-| Base | fWAR | fWAR |
-| Batting | xwOBA, with wOBA park factors | xwOBA, park factors removed ("xwOBA is mostly unaffected by location") |
-| Pitching | xFIP | xERA ("to remain consistent with the xwOBA framework") |
-| Defense | Average of FRV and DRS | FRV and DRS weighted by position, following Tom Tango's research |
+xWAR rebuilds fWAR from the parts of a season a player controls most: expected batting (xwOBA), expected pitching (xFIP or xERA) and a position-weighted blend of two fielding metrics. This project tests whether xWAR predicts a player's future WAR better than FanGraphs WAR (fWAR), Baseball-Reference WAR (bWAR) or their average (aWAR).
 
 ## The short answer
 
 | | Result |
 |---|---|
-| **Pitchers** | **The original xWAR (xFIP) is the best predictor** at every horizon and in every check. Next-season aWAR: r = {pn['r']['xWAR_orig']:.3f}, vs {pn['r']['fWAR']:.3f} for fWAR. The updated xWAR predicts worse than plain fWAR ({pn['r']['xWAR_upd']:.3f}), and the xFIP → xERA swap accounts for all of the drop. |
-| **Hitters** | **A tie.** Over 1 to 5 seasons, both xWARs and aWAR finish within noise of each other (next season: original {hn['r']['xWAR_orig']:.3f}, updated {hn['r']['xWAR_upd']:.3f}, aWAR {hn['r']['aWAR']:.3f}). All three edge out fWAR and bWAR by about 0.01 to 0.02. For the best season over the next 10 years, the updated version ranks last ({h10['r']['xWAR_upd']:.3f}), mostly because of the park-factor removal. |
+| **Pitchers** | **xWAR(xFIP) is the best predictor** at every horizon and on every target. Next-season aWAR: r = {pn['r']['xWAR_xFIP']:.3f}, vs {pn['r']['fWAR']:.3f} for fWAR. The xERA version predicts worse than plain fWAR ({pn['r']['xWAR_xERA']:.3f}). |
+| **Hitters** | **A tie.** xWAR and aWAR finish within noise of each other (next-season r = {hn['r']['xWAR_xFIP']:.3f} vs {hn['r']['aWAR']:.3f}). Both edge out fWAR and bWAR by about 0.01 to 0.02. |
 | **Horizon** | **5 seasons.** The future average levels off by 5 seasons (reliability 0.89 hitters, 0.85 pitchers). Longer windows cost a base season per year and mostly measure aging. |
 
-## What each Nov 17 change did
+## The stats compared
 
-Starting from the original xWAR, each change was applied on its own, then all three together (the updated xWAR). Values are r with future aWAR, original → changed, with the change and its 95% paired bootstrap interval. **(clear)** means the interval excludes zero.
+| Stat | Definition |
+|---|---|
+| fWAR | FanGraphs Wins Above Replacement. |
+| bWAR | Baseball-Reference Wins Above Replacement. |
+| aWAR | The average of the two: (fWAR + bWAR) / 2. |
+| xWAR(xFIP) | fWAR with batting runs adjusted from wOBA to Statcast xwOBA (park factor kept), fielding as a position-weighted blend of Statcast Fielding Run Value (FRV) and Defensive Runs Saved (DRS), and pitching runs from xFIP instead of FIP. |
+| xWAR(xERA) | The same, with pitching runs from Statcast xERA instead of xFIP. For hitters the two xWARs are identical, so hitter tables show one xWAR column. |
 
-{md_changes()}
-
-- **xFIP → xERA** is the only change with a clear effect, and it lowers predictive accuracy at every horizon. This matches published research: xERA predicts next-season ERA worse than xFIP and SIERA ([Dan Richards, Pitcher List](https://pitcherlist.com/the-relative-value-of-fip-xfip-siera-and-xera-pt-ii/)). Contact quality allowed is less stable year to year for pitchers than strikeouts, walks and ground balls.
-- **Tango's position weights** have no measurable effect on prediction (within ±0.003). They are better grounded, but fielding moves a player's WAR by only about 0.2 wins a season, too little to change a forecast.
-- **Removing park factors** has no effect over 1 to 5 seasons and lowers the 10-year result ({hp['Best season in next 10']['diff']:+.3f}, interval [{hp['Best season in next 10']['lo']:+.3f}, {hp['Best season in next 10']['hi']:+.3f}], only the 2016 class). Derived xwOBA park factors, which TJStats plans to add, would be worth testing here.
+- **Why xFIP beats xERA for prediction:** published research finds xERA predicts next-season ERA worse than xFIP and SIERA ([Dan Richards, Pitcher List](https://pitcherlist.com/the-relative-value-of-fip-xfip-siera-and-xera-pt-ii/)). Contact quality allowed is less stable year to year for pitchers than strikeouts, walks and ground balls.
 
 ## Results
 
-Each value is the Pearson r between a stat in one season and the player's later WAR. The highest value in each row is bold. "Clear" means the leader's 95% interval over second place is above zero; "tie" means it isn't.
+Each value is the Pearson r between a stat in one season and the player's later WAR. The highest value in each row is bold. "Clear" means the leader's 95% interval over second place is above zero; "tie" means it isn't. For hitters the two xWARs are identical, so they share one column.
 
 {chr(10).join(chr(10) + x + chr(10) for x in tables)}
 † Only the 2016 season has 10 complete future seasons (2017 to 2026), so this row uses about 350 hitters and 385 pitchers. Treat it as a rough check.
@@ -141,14 +123,14 @@ Before seeing which stat won, we set a rule (see [PLAN.md](PLAN.md)): pick the s
 
 Reliability is split-half (odd vs even future seasons), corrected to the full window. Each added season removes one base season from the sample.
 
-## How the rebuild works
+## How xWAR was built
 
-- **Batting:** FanGraphs batting runs plus (xwOBA − wOBA) / wOBA scale × PA, using Baseball Savant's xwOBA and wOBA, centered so each season's league total is unchanged. That keeps FanGraphs' park adjustment (original version). The updated version instead measures xwOBA against the MLB non-pitcher average with no park adjustment.
-- **Fielding:** FanGraphs fielding is based on FRV. The original version replaces it with the average of FRV and DRS. The updated version uses w × FRV + (1 − w) × DRS, with both centered within position and season and w set by position (below).
-- **Pitching:** fWAR plus (FIP − xFIP) × IP / 9 (original) or (FIP − xERA) × IP / 9 (updated), converted to wins with each pitcher's own FanGraphs runs-per-win ratio and centered so each season's league average is unchanged.
+- **Batting:** FanGraphs batting runs plus (xwOBA − wOBA) / wOBA scale × PA, using Baseball Savant's xwOBA and wOBA, centered so each season's league total is unchanged. FanGraphs' park adjustment is kept. (Removing it gave no gain over 1 to 5 seasons and was worse for the 10-year best season.)
+- **Fielding:** FanGraphs fielding is based on FRV, so it is replaced with w × FRV + (1 − w) × DRS, with both centered within position and season. The weight w depends on position (below). Swapping these weights for a flat 50/50 changed no result by more than 0.003.
+- **Pitching:** fWAR plus (FIP − xFIP) × IP / 9, or (FIP − xERA) × IP / 9, converted to wins with each pitcher's own FanGraphs runs-per-win ratio. Both are centered so each season's league average is unchanged.
 - **League check:** league-wide xWAR stays within about 1% of fWAR in every season.
 
-### Fielding weights by position (updated version)
+### Fielding weights by position
 
 From Tom Tango's ["Comparing Statcast Fielding Run Value (FRV) to DRS"](https://tangotiger.com/index.php/site/comments/comparing-statcast-fielding-run-value-frv-to-drs) (September 2026). We reproduced his test on the same seasons ([src/defense_weights.py](src/defense_weights.py)) and got the same sample sizes and year-to-year correlations within 0.02. Our own fitted weights agree on direction: catchers and outfielders lean FRV, 2B and 3B lean DRS.
 
@@ -160,7 +142,7 @@ From Tom Tango's ["Comparing Statcast Fielding Run Value (FRV) to DRS"](https://
 - **Missing seasons:** a season with no MLB appearance counts as 0 WAR.
 - **2020:** WAR in 2020 is scaled by 162/60.
 - **Uncertainty:** 95% intervals come from 2,000 bootstrap resamples of players, since a player can appear in several base seasons.
-- **Robustness:** every claim above also holds with 100+ PA / 100+ IP only, without the 2020 scaling, among players who played the next season, and on 2016–2019 base seasons only.
+- **Robustness:** the pitcher and hitter results also hold with 100+ PA / 100+ IP only, without the 2020 scaling, among players who played the next season, and on 2016–2019 base seasons only.
 - **Limits:** WAR includes playing time, so these correlations partly measure who keeps getting at-bats or innings. aWAR averages two measurements of the same season, which by itself reduces noise.
 
 ## Data
@@ -172,17 +154,16 @@ All data was downloaded locally and is **not included in this repository**. Some
 | Path | Contents |
 |---|---|
 | `PLAN.md` | Test plan written before any results, plus later amendments |
-| `src/build.py` | Builds the player-season table with fWAR, bWAR, aWAR and both xWAR versions |
+| `src/build.py` | Builds the player-season table with fWAR, bWAR, aWAR, xWAR(xFIP) and xWAR(xERA) |
 | `src/defense_weights.py` | Replicates Tango's FRV vs DRS test |
 | `src/analyze.py` | Main tests (see PLAN.md). Sensitivity flags: `--pa 400 --ip 100`, `--no2020scale`, `--played-only`, `--bases 2016-2019` |
-| `src/changes.py` | Tests each Nov 17 change on its own |
 | `src/report.py`, `src/make_readme.py` | Write the full tables and this README |
 
 Requirements: Python 3.9+, pandas, numpy (`pip install -r requirements.txt`).
 
 ## Credits
 
-- **xWAR:** [Thomas Nestico (TJStats on X)](https://x.com/TJStats). Official leaderboard: [tjstats.ca/xwar](https://tjstats.ca/xwar/).
+- **xWAR idea:** [Thomas Nestico (TJStats on X)](https://x.com/TJStats). His own version and leaderboard: [tjstats.ca/xwar](https://tjstats.ca/xwar/).
 - **Fielding-weight research:** Tom Tango, ["Comparing Statcast Fielding Run Value (FRV) to DRS"](https://tangotiger.com/index.php/site/comments/comparing-statcast-fielding-run-value-frv-to-drs) and ["FRV v DRS"](https://tangotiger.com/index.php/site/article/frv-v-drs), Tangotiger Blog. Tom Tango also created FIP and, with Mitchel Lichtman and Andrew Dolphin, wOBA (*The Book*).
 - **fWAR, FIP, xFIP and DRS exports:** [FanGraphs](https://www.fangraphs.com). xFIP was developed by Dave Studeman of The Hardball Times.
 - **bWAR:** [Baseball-Reference.com](https://www.baseball-reference.com) (Sports Reference LLC). Its WAR framework was originally provided by Sean Smith.
@@ -195,7 +176,7 @@ Requirements: Python 3.9+, pandas, numpy (`pip install -r requirements.txt`).
 
 **For educational and non-commercial purposes only.** This is an independent analysis. It is not affiliated with, sponsored by or endorsed by FanGraphs, Sports Reference LLC (Baseball-Reference.com), Major League Baseball, MLB Advanced Media, Baseball Savant, Sports Info Solutions, Pitcher List, Tom Tango or Thomas Nestico (TJStats).
 
-fWAR is a statistic of FanGraphs. bWAR (Baseball-Reference WAR) is a statistic of Sports Reference LLC. xWAR is the work of Thomas Nestico. Statcast metrics (xwOBA, xERA, Fielding Run Value) belong to MLB Advanced Media. Defensive Runs Saved belongs to Sports Info Solutions. All names and trademarks belong to their respective owners and are used here only to identify the source of the data.
+fWAR is a statistic of FanGraphs. bWAR (Baseball-Reference WAR) is a statistic of Sports Reference LLC. The xWAR concept is the work of Thomas Nestico. Statcast metrics (xwOBA, xERA, Fielding Run Value) belong to MLB Advanced Media. Defensive Runs Saved belongs to Sports Info Solutions. All names and trademarks belong to their respective owners and are used here only to identify the source of the data.
 
 This repository publishes only code and the aggregate summary statistics shown above (correlations and sample sizes) from our own analysis. It does not reproduce or redistribute any provider's data tables, player-level statistics or leaderboards. To view the underlying statistics, please visit the original sources linked above.
 
