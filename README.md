@@ -12,17 +12,17 @@ Each value is the correlation between a stat in one season and the same stat the
 
 | Group | n | xWAR(xFIP) | xWAR(xERA) | fWAR | bWAR | aWAR | xWAR's edge over next best [95% interval] |
 |---|---:|---:|---:|---:|---:|---:|---|
-| Hitters | 2,364 | **0.552** | same as xFIP | 0.507 | 0.494 | 0.507 | +0.045 [+0.027, +0.064] over fWAR |
-| Pitchers | 2,314 | **0.674** | 0.556 | 0.550 | 0.352 | 0.472 | +0.118 [+0.091, +0.149] over xWAR(xERA) |
+| Hitters | 2,364 | **0.604** | same as xFIP | 0.507 | 0.494 | 0.507 | +0.097 [+0.072, +0.122] over fWAR |
+| Pitchers | 2,314 | **0.676** | 0.558 | 0.550 | 0.352 | 0.472 | +0.119 [+0.092, +0.150] over xWAR(xERA) |
 
-xWAR is the stickiest version of WAR for both hitters and pitchers, and the edge is clear in both groups. For pitchers, xWAR(xFIP) is 0.124 stickier than fWAR and 0.323 stickier than bWAR. For hitters, xWAR is 0.045 stickier than fWAR and 0.058 stickier than bWAR. Sticky doesn't automatically mean better, since a stat can also be sticky by ignoring real differences between players (xFIP, for example, gives every pitcher a league-average home run rate on fly balls). That's why the second test, predicting actual future WAR, matters too.
+xWAR is the stickiest version of WAR for both hitters and pitchers, and the edge is clear in both groups. For pitchers, xWAR(xFIP) is 0.126 stickier than fWAR and 0.325 stickier than bWAR. For hitters, xWAR is 0.097 stickier than fWAR and 0.110 stickier than bWAR. Sticky doesn't automatically mean better, since a stat can also be sticky by ignoring real differences between players (xFIP, for example, gives every pitcher a league-average home run rate on fly balls). That's why the second test, predicting actual future WAR, matters too.
 
 ## The short answer
 
 | | Result |
 |---|---|
-| **Stickiness** | **xWAR is the stickiest** for both hitters (r = 0.552 vs 0.507 for fWAR) and pitchers (r = 0.674 vs 0.550). |
-| **Predicting WAR: pitchers** | **xWAR(xFIP) is the best predictor** at every horizon and on every target. Next-season aWAR: r = 0.562, vs 0.531 for fWAR. The xERA version predicts worse than plain fWAR (0.518). |
+| **Stickiness** | **xWAR is the stickiest** for both hitters (r = 0.604 vs 0.507 for fWAR) and pitchers (r = 0.676 vs 0.550). |
+| **Predicting WAR: pitchers** | **xWAR(xFIP) is the best predictor** at every horizon and on every target. Next-season aWAR: r = 0.561, vs 0.531 for fWAR. The xERA version predicts worse than plain fWAR (0.518). |
 | **Predicting WAR: hitters** | **A tie.** xWAR and aWAR finish within noise of each other (next-season r = 0.574 vs 0.565). Both edge out fWAR and bWAR by about 0.01 to 0.02. |
 | **Horizon** | **5 seasons.** The future average levels off by 5 seasons (reliability 0.89 hitters, 0.85 pitchers). Longer windows cost a base season per year and mostly measure aging. |
 
@@ -49,10 +49,10 @@ aWAR is the fairest target, because it isn't built from any single site's WAR.
 
 | Horizon | n | xWAR | fWAR | bWAR | aWAR | Leader's edge [95% interval] |
 |---|---:|---:|---:|---:|---:|---|
-| Next season | 3,336 | **0.574** | 0.557 | 0.554 | 0.565 | +0.009 [+0.000, +0.019] tie |
-| Average of next 5 seasons | 1,903 | **0.595** | 0.583 | 0.586 | 0.594 | +0.001 [-0.009, +0.011] tie |
-| Best season in next 5 | 1,903 | **0.609** | 0.593 | 0.600 | 0.607 | +0.002 [-0.007, +0.012] tie |
-| Best season in next 10 † | 353 | 0.587 | 0.577 | **0.600** | 0.599 | +0.000 [-0.014, +0.014] tie |
+| Next season | 3,336 | **0.574** | 0.557 | 0.554 | 0.565 | +0.010 [-0.004, +0.024] tie |
+| Average of next 5 seasons | 1,903 | **0.596** | 0.583 | 0.586 | 0.594 | +0.001 [-0.021, +0.022] tie |
+| Best season in next 5 | 1,903 | **0.611** | 0.593 | 0.600 | 0.607 | +0.004 [-0.018, +0.024] tie |
+| Best season in next 10 † | 353 | 0.548 | 0.577 | **0.600** | 0.599 | +0.000 [-0.014, +0.014] tie |
 
 
 ### Table 2. Pitchers: correlation with future aWAR
@@ -61,10 +61,10 @@ aWAR is the fairest target, because it isn't built from any single site's WAR.
 
 | Horizon | n | xWAR(xFIP) | xWAR(xERA) | fWAR | bWAR | aWAR | Leader's edge [95% interval] |
 |---|---:|---:|---:|---:|---:|---:|---|
-| Next season | 3,721 | **0.562** | 0.518 | 0.531 | 0.436 | 0.501 | +0.031 [+0.019, +0.043] clear |
-| Average of next 5 seasons | 2,098 | **0.578** | 0.519 | 0.533 | 0.449 | 0.508 | +0.046 [+0.029, +0.063] clear |
-| Best season in next 5 | 2,098 | **0.610** | 0.555 | 0.564 | 0.473 | 0.537 | +0.046 [+0.031, +0.063] clear |
-| Best season in next 10 † | 385 | **0.591** | 0.532 | 0.555 | 0.415 | 0.503 | +0.036 [+0.006, +0.066] clear |
+| Next season | 3,721 | **0.561** | 0.518 | 0.531 | 0.436 | 0.501 | +0.030 [+0.018, +0.043] clear |
+| Average of next 5 seasons | 2,098 | **0.577** | 0.519 | 0.533 | 0.449 | 0.508 | +0.044 [+0.026, +0.063] clear |
+| Best season in next 5 | 2,098 | **0.609** | 0.554 | 0.564 | 0.473 | 0.537 | +0.045 [+0.029, +0.062] clear |
+| Best season in next 10 † | 385 | **0.589** | 0.529 | 0.555 | 0.415 | 0.503 | +0.034 [+0.004, +0.064] clear |
 
 
 ### Table 3. Hitters: correlation with future bWAR
@@ -73,10 +73,10 @@ This target favors bWAR, since it shares bWAR's own method.
 
 | Horizon | n | xWAR | fWAR | bWAR | aWAR | Leader's edge [95% interval] |
 |---|---:|---:|---:|---:|---:|---|
-| Next season | 3,336 | **0.557** | 0.536 | 0.551 | 0.553 | +0.004 [-0.006, +0.014] tie |
-| Average of next 5 seasons | 1,903 | 0.585 | 0.569 | 0.585 | **0.587** | +0.003 [-0.009, +0.013] tie |
-| Best season in next 5 | 1,903 | 0.598 | 0.580 | 0.599 | **0.600** | +0.001 [-0.006, +0.009] tie |
-| Best season in next 10 † | 353 | 0.575 | 0.562 | **0.598** | 0.591 | +0.007 [-0.007, +0.022] tie |
+| Next season | 3,336 | **0.557** | 0.536 | 0.551 | 0.553 | +0.004 [-0.011, +0.019] tie |
+| Average of next 5 seasons | 1,903 | 0.584 | 0.569 | 0.585 | **0.587** | +0.003 [-0.006, +0.011] tie |
+| Best season in next 5 | 1,903 | 0.597 | 0.580 | 0.599 | **0.600** | +0.001 [-0.006, +0.009] tie |
+| Best season in next 10 † | 353 | 0.534 | 0.562 | **0.598** | 0.591 | +0.007 [-0.007, +0.022] tie |
 
 
 ### Table 4. Pitchers: correlation with future bWAR
@@ -85,10 +85,10 @@ This target favors bWAR, since it shares bWAR's own method.
 
 | Horizon | n | xWAR(xFIP) | xWAR(xERA) | fWAR | bWAR | aWAR | Leader's edge [95% interval] |
 |---|---:|---:|---:|---:|---:|---:|---|
-| Next season | 3,721 | **0.487** | 0.460 | 0.463 | 0.386 | 0.440 | +0.024 [+0.011, +0.038] clear |
-| Average of next 5 seasons | 2,098 | **0.539** | 0.492 | 0.501 | 0.428 | 0.481 | +0.038 [+0.020, +0.056] clear |
-| Best season in next 5 | 2,098 | **0.561** | 0.514 | 0.521 | 0.447 | 0.501 | +0.040 [+0.023, +0.058] clear |
-| Best season in next 10 † | 385 | **0.560** | 0.501 | 0.532 | 0.395 | 0.480 | +0.028 [-0.002, +0.058] tie |
+| Next season | 3,721 | **0.487** | 0.459 | 0.463 | 0.386 | 0.440 | +0.023 [+0.010, +0.037] clear |
+| Average of next 5 seasons | 2,098 | **0.537** | 0.491 | 0.501 | 0.428 | 0.481 | +0.036 [+0.017, +0.055] clear |
+| Best season in next 5 | 2,098 | **0.560** | 0.513 | 0.521 | 0.447 | 0.501 | +0.039 [+0.022, +0.057] clear |
+| Best season in next 10 † | 385 | **0.558** | 0.498 | 0.532 | 0.395 | 0.480 | +0.026 [-0.006, +0.056] tie |
 
 
 ### Table 5. Hitters: correlation with future fWAR
@@ -97,10 +97,10 @@ This target favors fWAR and both xWARs, which are built on fWAR.
 
 | Horizon | n | xWAR | fWAR | bWAR | aWAR | Leader's edge [95% interval] |
 |---|---:|---:|---:|---:|---:|---|
-| Next season | 3,336 | **0.576** | 0.563 | 0.543 | 0.562 | +0.013 [+0.004, +0.023] clear |
-| Average of next 5 seasons | 1,903 | **0.599** | 0.590 | 0.580 | 0.595 | +0.004 [-0.006, +0.016] tie |
-| Best season in next 5 | 1,903 | **0.612** | 0.599 | 0.591 | 0.605 | +0.007 [-0.002, +0.017] tie |
-| Best season in next 10 † | 353 | 0.592 | 0.585 | 0.589 | **0.597** | +0.005 [-0.008, +0.019] tie |
+| Next season | 3,336 | **0.577** | 0.563 | 0.543 | 0.562 | +0.014 [-0.001, +0.028] tie |
+| Average of next 5 seasons | 1,903 | **0.601** | 0.590 | 0.580 | 0.595 | +0.006 [-0.017, +0.029] tie |
+| Best season in next 5 | 1,903 | **0.616** | 0.599 | 0.591 | 0.605 | +0.010 [-0.011, +0.031] tie |
+| Best season in next 10 † | 353 | 0.553 | 0.585 | 0.589 | **0.597** | +0.009 [-0.007, +0.024] tie |
 
 
 ### Table 6. Pitchers: correlation with future fWAR
@@ -109,10 +109,10 @@ This target favors fWAR and both xWARs, which are built on fWAR.
 
 | Horizon | n | xWAR(xFIP) | xWAR(xERA) | fWAR | bWAR | aWAR | Leader's edge [95% interval] |
 |---|---:|---:|---:|---:|---:|---:|---|
-| Next season | 3,721 | **0.605** | 0.546 | 0.567 | 0.460 | 0.532 | +0.037 [+0.026, +0.049] clear |
-| Average of next 5 seasons | 2,098 | **0.602** | 0.533 | 0.550 | 0.458 | 0.522 | +0.052 [+0.035, +0.070] clear |
-| Best season in next 5 | 2,098 | **0.637** | 0.574 | 0.586 | 0.484 | 0.554 | +0.051 [+0.036, +0.069] clear |
-| Best season in next 10 † | 385 | **0.607** | 0.555 | 0.567 | 0.427 | 0.515 | +0.039 [+0.011, +0.072] clear |
+| Next season | 3,721 | **0.604** | 0.545 | 0.567 | 0.460 | 0.532 | +0.036 [+0.025, +0.048] clear |
+| Average of next 5 seasons | 2,098 | **0.601** | 0.532 | 0.550 | 0.458 | 0.522 | +0.051 [+0.033, +0.069] clear |
+| Best season in next 5 | 2,098 | **0.636** | 0.573 | 0.586 | 0.484 | 0.554 | +0.050 [+0.034, +0.068] clear |
+| Best season in next 10 † | 385 | **0.605** | 0.553 | 0.567 | 0.427 | 0.515 | +0.038 [+0.009, +0.068] clear |
 
 † Only the 2016 season has 10 complete future seasons (2017 to 2026), so this row uses about 350 hitters and 385 pitchers. Treat it as a rough check.
 
@@ -161,8 +161,12 @@ I used the position weights from Tom Tango's ["Comparing Statcast Fielding Run V
 - **Missing seasons:** a season with no MLB appearance counts as 0 WAR.
 - **2020:** WAR in 2020 is scaled by 162/60.
 - **Uncertainty:** 95% intervals come from 2,000 bootstrap resamples of players, since a player can appear in several base seasons.
-- **Robustness:** the pitcher and hitter results also hold with 100+ PA / 100+ IP only, without the 2020 scaling, among players who played the next season, and on 2016–2019 base seasons only.
+- **Robustness:** the pitcher and hitter results also hold with 400+ PA / 100+ IP only, without the 2020 scaling, among players who played the next season, and on 2016–2019 base seasons only.
 - **Limits:** WAR includes playing time, so these correlations partly measure who keeps getting at-bats or innings. aWAR averages two measurements of the same season, which by itself reduces noise.
+
+## Correction (November 17, 2026)
+
+An earlier version of this README had a bug in `src/build.py`. In seasons where Baseball Savant was missing xwOBA for even one player (2015 to 2019, 2021 and 2026), the league average came out blank, so every hitter's xwOBA batting adjustment was set to zero for that season. The fix skips players without xwOBA when computing the average. All tables above use the fixed build. The pitcher results did not change. Hitter xWAR became clearly stickier (year-to-year r 0.552 before the fix), hitter prediction is still a tie with aWAR, and hitter xWAR now trails the other stats on the small best-season-in-10-years check.
 
 ## Data
 

@@ -96,7 +96,7 @@ sh, sp = ST["hitters"], ST["pitchers"]
 
 readme = f"""# xWAR Correlation: is xWAR stickier than WAR, and does it predict the future better?
 
-**The idea for xWAR comes from [Thomas Nestico (TJStats on X)](https://x.com/TJStats).** His goal is to capture player value from the factors a player can most directly impact, while my goal is to predict a player's future WAR, so I made some fine-tuning changes to help toward that goal. Fielding weights come from [Tom Tango's research](https://tangotiger.com/index.php/site/comments/comparing-statcast-fielding-run-value-frv-to-drs). Full credits and a disclaimer are at the bottom.
+**The idea for xWAR comes from [Thomas Nestico (TJStats on X)](https://x.com/TJStats).** His goal is to capture player value from the factors a player can most directly impact, while my goal is to predict how sticky xWAR is and a player's future WAR, so I made some fine-tuning changes to help toward that goal. Fielding weights come from [Tom Tango's research](https://tangotiger.com/index.php/site/comments/comparing-statcast-fielding-run-value-frv-to-drs). Full credits and a disclaimer are at the bottom.
 
 When looking at expected stats, I usually like to see whether a player outperformed or underperformed them, and whether that gap correlates with future outcomes. So I decided to put that together and look into it.
 
@@ -165,8 +165,12 @@ I used the position weights from Tom Tango's ["Comparing Statcast Fielding Run V
 - **Missing seasons:** a season with no MLB appearance counts as 0 WAR.
 - **2020:** WAR in 2020 is scaled by 162/60.
 - **Uncertainty:** 95% intervals come from 2,000 bootstrap resamples of players, since a player can appear in several base seasons.
-- **Robustness:** the pitcher and hitter results also hold with 100+ PA / 100+ IP only, without the 2020 scaling, among players who played the next season, and on 2016–2019 base seasons only.
+- **Robustness:** the pitcher and hitter results also hold with 400+ PA / 100+ IP only, without the 2020 scaling, among players who played the next season, and on 2016–2019 base seasons only.
 - **Limits:** WAR includes playing time, so these correlations partly measure who keeps getting at-bats or innings. aWAR averages two measurements of the same season, which by itself reduces noise.
+
+## Correction (November 17, 2026)
+
+An earlier version of this README had a bug in `src/build.py`. In seasons where Baseball Savant was missing xwOBA for even one player (2015 to 2019, 2021 and 2026), the league average came out blank, so every hitter's xwOBA batting adjustment was set to zero for that season. The fix skips players without xwOBA when computing the average. All tables above use the fixed build. The pitcher results did not change. Hitter xWAR became clearly stickier (year-to-year r 0.552 before the fix), hitter prediction is still a tie with aWAR, and hitter xWAR now trails the other stats on the small best-season-in-10-years check.
 
 ## Data
 

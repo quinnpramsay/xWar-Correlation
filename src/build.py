@@ -45,7 +45,8 @@ const = pd.DataFrame(const)
 sav_b = pd.concat([pd.read_csv(RAW / f"savant_x_batter_{y}.csv", encoding="utf-8-sig") for y in YEARS])
 sav_b = sav_b.rename(columns={"player_id": "MLBAMID", "year": "Season"})[["MLBAMID", "Season", "pa", "woba", "est_woba"]]
 sav_b["dx"] = sav_b.est_woba - sav_b.woba
-lg = sav_b.groupby("Season").apply(lambda g: np.average(g.dx, weights=g.pa)).rename("dx_lg")
+ok_x = sav_b.dx.notna()  # a few players per season have no xwOBA; skip them so the league mean is not NaN
+lg = sav_b[ok_x].groupby("Season").apply(lambda g: np.average(g.dx, weights=g.pa)).rename("dx_lg")
 sav_b = sav_b.join(lg, on="Season")
 sav_b["dx_c"] = sav_b.dx - sav_b.dx_lg
 b = bat[["Season", "PlayerId", "MLBAMID", "Name", "PA", "WAR"]].rename(columns={"WAR": "fWAR_bat"})
